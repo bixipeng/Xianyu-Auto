@@ -1,0 +1,17 @@
+{
+  "name": "xianyu-sign-service",
+  "version": "1.0.0",
+  "description": "闲鱼 API 签名服务 - 提供 x-sign / MTOP sign 生成",
+  "type": "module",
+  "main": "server.ts",
+  "scripts": {
+    "start": "tsx server.ts",
+    "dev": "tsx watch server.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.19.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

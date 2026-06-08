@@ -48,8 +48,10 @@ export class XianyuClient {
         };
 
         let signHeaders: Record<string, string> = {};
+        let mtopSign = "";
         try {
           const signResult = await getSign(signParams, this.config);
+          mtopSign = (signResult as Record<string, string>).sign || "";
           signHeaders = {
             "x-sign": signResult["x-sign"],
             "x-mini-wua": signResult["x-mini-wua"],
@@ -65,7 +67,7 @@ export class XianyuClient {
             jsv: "2.7.2",
             appKey: this.session.appKey,
             t: timestamp,
-            sign: "",
+            sign: mtopSign,
             api,
             v: "1.0",
             type: "originaljson",
