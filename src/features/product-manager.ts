@@ -91,26 +91,88 @@ export class ProductManager {
   async getMyProducts(page = 1, pageSize = 20): Promise<ListedProduct[]> {
     logger.debug("Fetching my products", { module: "product", page });
 
-    const result = await this.client.get<{
-      data: { items: Array<Record<string, unknown>>; hasMore: boolean };
-    }>("mtop.idle.my.items", {
-      page,
+    const userId = this.client.getSession().userId;
+    const result = await this.client.post<{
+      data: {
+        cardList: Array<Record<string, unknown>>;
+        totalCount: string;
+        nextPage: string;
+        itemTopicList: unknown[];
+        serverTime: string;
+      };
+    }>("mtop.idle.web.xyh.item.list", {
+      userId,
+      pageNumber: page,
       pageSize,
-      status: 0,
+      scene: "seller_home",
     });
 
-    return (result.data.items || []).map((item) => ({
-      title: String(item.title || ""),
-      description: String(item.desc || ""),
-      price: Number(item.price || 0) / 100,
-      images: Array.isArray(item.images) ? item.images.map(String) : [],
-      categoryId: String(item.catId || ""),
-      itemId: String(item.itemId || ""),
-      status: this.parseStatus(String(item.status || "0")),
-      listedAt: Number(item.gmtCreate || Date.now()),
-      views: Number(item.viewCount || 0),
-      likes: Number(item.likeCount || 0),
-    }));
+    const cardList = result?.data?.cardList || [];
+    return cardList.map((card) => {
+      // Actual structure: { cardData: { title, id, categoryId, itemStatus, picInfo, priceInfo, detailParams }, cardType }
+      const cardData = (card.cardData || card) as Record<string, unknown>;
+      const detailParams = (cardData.detailParams || {}) as Record<string, unknown>;
+      const priceInfo = (cardData.priceInfo || {}) as Record<string, unknown>;
+      const picInfo = (cardData.picInfo || {}) as Record<string, unknown>;
+
+      // Extract itemId from cardData.id or detailParams.itemId
+      const itemId = String(cardData.id || detailParams.itemId || "");
+
+      // Extract title
+      const title = String(cardData.title || detailParams.title || "");
+
+      // Extract price — priceInfo.price is in yuan (not fen), no need to divide by 100
+      const priceStr = String(priceInfo.price || detailParams.soldPrice || "0");
+      const price = Number(priceStr);
+
+      // Extract images
+      const images: string[] = [];
+      const mainPicUrl = String(picInfo.picUrl || detailParams.picUrl || "");
+      if (mainPicUrl) images.push(mainPicUrl);
+
+      // Parse imageInfos JSON array from detailParams for additional images
+      if (typeof detailParams.imageInfos === "string") {
+        try {
+          const imageInfos = JSON.parse(detailParams.imageInfos) as Array<Record<string, unknown>>;
+          for (const img of imageInfos) {
+            if (img.url) images.push(String(img.url));
+          }
+        } catch { /* ignore parse errors */ }
+      }
+
+      // Deduplicate images
+      const uniqueImages = [...new Set(images)];
+
+      // Parse status: itemStatus=0 means online
+      const itemStatus = Number(cardData.itemStatus ?? -1);
+
+      // Parse "X人想要" from label data for likes count
+      let likes = 0;
+      try {
+        const labelData = ((cardData.itemLabelDataVO as Record<string, unknown>)?.labelData as Record<string, unknown>) || {};
+        for (const pos of Object.values(labelData)) {
+          const tagList = ((pos as Record<string, unknown>)?.tagList as Array<Record<string, unknown>>) || [];
+          for (const tag of tagList) {
+            const content = String(((tag as Record<string, unknown>)?.data as Record<string, unknown>)?.content || "");
+            const match = content.match(/(\d+)人想要/);
+            if (match) likes = parseInt(match[1], 10);
+          }
+        }
+      } catch { /* ignore */ }
+
+      return {
+        title,
+        description: "",
+        price,
+        images: uniqueImages,
+        categoryId: String(cardData.categoryId || ""),
+        itemId,
+        status: this.parseStatus(String(itemStatus)),
+        listedAt: Date.now(),
+        views: 0,
+        likes,
+      };
+    });
   }
 
   async polishProduct(itemId: string): Promise<void> {
@@ -145,7 +207,7 @@ export class ProductManager {
 
   async getProductDetail(itemId: string): Promise<Record<string, unknown> | null> {
     try {
-      const result = await this.client.get<{ data: Record<string, unknown> }>("mtop.idle.item.detail", {
+      const result = await this.client.post<{ data: Record<string, unknown> }>("mtop.taobao.idle.pc.detail", {
         itemId,
       });
       return result.data;

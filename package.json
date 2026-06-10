@@ -13,11 +13,16 @@
     "sign:dev": "tsx watch sign-service/server.ts"
   },
   "dependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "axios": "^1.7.0",
     "chalk": "^5.3.0",
+    "cors": "^2.8.6",
     "cron": "^3.1.0",
     "dotenv": "^16.4.0",
     "eventemitter3": "^5.0.0",
+    "express": "^5.2.1",
+    "msgpackr": "^2.0.3",
     "p-queue": "^8.0.0",
     "winston": "^3.14.0",
     "ws": "^8.18.0"

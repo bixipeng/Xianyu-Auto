@@ -7,7 +7,9 @@ import { AutoReply } from "./features/auto-reply.js";
 import { PriceMonitor } from "./features/price-monitor.js";
 import { DataScraper } from "./features/data-scraper.js";
 import { AutoDeliver } from "./features/auto-deliver.js";
+import { MessageStore } from "./features/message-store.js";
 import { TaskScheduler } from "./scheduler.js";
+import { startApiServer } from "./api/server.js";
 import { logger } from "./utils/logger.js";
 
 async function main(): Promise<void> {
@@ -32,13 +34,16 @@ async function main(): Promise<void> {
   const productManager = new ProductManager(client, config.dataDir);
   const priceMonitor = new PriceMonitor(client, config.dataDir);
   const dataScraper = new DataScraper(client, config.dataDir);
+  const messageStore = new MessageStore(config.dataDir);
+  await messageStore.load();
 
+  let autoReply: AutoReply | null = null;
   if (config.autoReplyEnabled) {
-    new AutoReply(client, ws, config);
+    autoReply = new AutoReply(client, ws, config);
     logger.info("Auto-reply enabled", { module: "main" });
   }
 
-  let autoDeliver: AutoDeliver | undefined;
+  let autoDeliver: AutoDeliver | null = null;
   if (config.autoDeliverEnabled) {
     autoDeliver = new AutoDeliver(client, ws, config, config.dataDir);
     logger.info("Auto-deliver enabled", { module: "main" });
@@ -69,6 +74,13 @@ async function main(): Promise<void> {
     });
 
     scheduler.start();
+
+    // Start management API server
+    const apiPort = parseInt(process.env.API_PORT || "3000", 10);
+    startApiServer({
+      config, client, ws, productManager, autoReply,
+      priceMonitor, dataScraper, autoDeliver, messageStore, scheduler,
+    }, apiPort);
 
     logger.info("XianYu Auto is running!", {
       module: "main",

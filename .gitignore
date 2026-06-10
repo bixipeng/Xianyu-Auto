@@ -4,3 +4,5 @@ logs/
 .env
 data/
 *.log
+*.tsbuildinfo
+test-*.*

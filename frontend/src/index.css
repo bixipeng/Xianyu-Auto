@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
+  }
+  .btn-primary {
+    @apply bg-brand hover:bg-brand-dark text-gray-900 font-medium px-4 py-2 rounded-xl transition-all duration-200 hover:shadow-md active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-4 py-2 rounded-xl transition-all duration-200;
+  }
+  .btn-danger {
+    @apply bg-red-50 hover:bg-red-100 text-red-600 font-medium px-4 py-2 rounded-xl transition-all duration-200;
+  }
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-green {
+    @apply badge bg-green-50 text-green-700;
+  }
+  .badge-red {
+    @apply badge bg-red-50 text-red-700;
+  }
+  .badge-yellow {
+    @apply badge bg-yellow-50 text-yellow-700;
+  }
+  .badge-blue {
+    @apply badge bg-blue-50 text-blue-700;
+  }
+  .badge-purple {
+    @apply badge bg-purple-50 text-purple-700;
+  }
+  .badge-gray {
+    @apply badge bg-gray-100 text-gray-600;
+  }
+  .stat-card {
+    @apply card flex flex-col;
+  }
+  .stat-value {
+    @apply text-3xl font-bold text-gray-900 mt-2;
+  }
+  .stat-label {
+    @apply text-sm text-gray-500 mt-1;
+  }
+  .toggle-switch {
+    @apply relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 cursor-pointer;
+  }
+  .toggle-switch-on {
+    @apply bg-brand;
+  }
+  .toggle-switch-off {
+    @apply bg-gray-300;
+  }
+  .toggle-dot {
+    @apply inline-block h-4 w-4 rounded-full bg-white shadow-sm transform transition-transform duration-200;
+  }
+  .toggle-dot-on {
+    @apply translate-x-6;
+  }
+  .toggle-dot-off {
+    @apply translate-x-1;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
